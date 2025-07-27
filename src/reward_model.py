@@ -7,7 +7,6 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from transformers import (
-    AutoTokenizer, 
     AutoModel, 
     AutoConfig,
     PreTrainedModel,
@@ -58,21 +57,10 @@ class RewardModel(PreTrainedModel):
         
         self.model_name = model_name
         self.hidden_size = hidden_size
-        
-        # Load the base transformer model
+
         self.transformer = AutoModel.from_pretrained(model_name)
         self.config = self.transformer.config
         
-        # BEGIN ASSIGN7_1_1
-        # TODO: Implement the reward head: maps hidden states to scalar rewards
-        # The reward head should:
-        # 1. Apply dropout for regularization
-        # 2. Use multiple linear layers (e.g., 768 -> 384 -> 192 -> 1)
-        # 3. Use ReLU activations between layers
-        # 4. Output a single scalar reward value
-        # raise NotImplementedError("Need to implement reward head for Assignment 7")
-        
-        # SOLUTION (for reference, will be removed):
         self.reward_head = nn.Sequential(
             nn.Dropout(dropout),
             nn.Linear(self.config.hidden_size, hidden_size),
@@ -83,26 +71,16 @@ class RewardModel(PreTrainedModel):
             nn.Dropout(dropout),
             nn.Linear(hidden_size // 2, 1)  # Output single scalar reward
         )
-        # END ASSIGN7_1_1
         
-        # Initialize weights
         self._init_weights()
     
     def _init_weights(self):
         """Initialize the weights of the reward head."""
-        # BEGIN ASSIGN7_1_2
-        # TODO: Initialize the weights of the reward head
-        # Use normal distribution with std=0.02 for linear layer weights
-        # Initialize biases to zero
-        # raise NotImplementedError("Need to implement weight initialization for Assignment 7")
-        
-        # SOLUTION (for reference, will be removed):
         for module in self.reward_head.modules():
             if isinstance(module, nn.Linear):
                 nn.init.normal_(module.weight, std=0.02)
                 if module.bias is not None:
                     nn.init.zeros_(module.bias)
-        # END ASSIGN7_1_2
     
     def forward(
         self,
@@ -131,49 +109,20 @@ class RewardModel(PreTrainedModel):
         """
         return_dict = return_dict if return_dict is not None else self.config.use_return_dict
         
-        # Forward pass through the transformer
         transformer_outputs = self.transformer(
             input_ids=input_ids,
             attention_mask=attention_mask,
-            token_type_ids=token_type_ids,
-            position_ids=position_ids,
             head_mask=head_mask,
             inputs_embeds=inputs_embeds,
             return_dict=True,
         )
         
         hidden_states = transformer_outputs.last_hidden_state
-        
-        # BEGIN ASSIGN7_1_3
-        # TODO: Extract representation for reward prediction
-        # For BERT-like models: use [CLS] token (first token)
-        # For other models: use mean pooling over non-padding tokens
-        # Handle attention_mask properly for mean pooling
-        # raise NotImplementedError("Need to implement representation extraction for Assignment 7")
-        
-        # SOLUTION (for reference, will be removed):
-        if hasattr(self.config, 'model_type') and 'bert' in self.config.model_type.lower():
-            # For BERT-like models, use [CLS] token
-            pooled_output = hidden_states[:, 0, :]
-        else:
-            # For other models, use mean pooling over non-padding tokens
-            if attention_mask is not None:
-                mask_expanded = attention_mask.unsqueeze(-1).expand(hidden_states.size()).float()
-                sum_hidden = torch.sum(hidden_states * mask_expanded, 1)
-                sum_mask = torch.clamp(mask_expanded.sum(1), min=1e-9)
-                pooled_output = sum_hidden / sum_mask
-            else:
-                pooled_output = hidden_states.mean(dim=1)
-        # END ASSIGN7_1_3
-        
-        # BEGIN ASSIGN7_1_4
-        # TODO: Generate reward scores using the reward head
-        # Apply the reward head to the pooled output and squeeze the last dimension
-        # raise NotImplementedError("Need to implement reward generation for Assignment 7")
-        
-        # SOLUTION (for reference, will be removed):
+
+        # For BERT-like models, use [CLS] token
+        pooled_output = hidden_states[:, 0, :]
+
         rewards = self.reward_head(pooled_output).squeeze(-1)
-        # END ASSIGN7_1_4
         
         if not return_dict:
             return (rewards, hidden_states)
@@ -213,12 +162,6 @@ class RewardModel(PreTrainedModel):
             for i in range(0, len(texts), batch_size):
                 batch_texts = texts[i:i + batch_size]
                 
-                # BEGIN ASSIGN7_1_5
-                # TODO: Tokenize the batch of texts
-                # Use padding=True, truncation=True, max_length=512, return_tensors="pt"
-                # raise NotImplementedError("Need to implement tokenization for Assignment 7")
-                
-                # SOLUTION (for reference, will be removed):
                 encoded = tokenizer(
                     batch_texts,
                     padding=True,
@@ -226,12 +169,9 @@ class RewardModel(PreTrainedModel):
                     max_length=512,
                     return_tensors="pt"
                 )
-                # END ASSIGN7_1_5
                 
-                # Move to device
                 encoded = {k: v.to(device) for k, v in encoded.items()}
                 
-                # Forward pass
                 outputs = self(
                     input_ids=encoded['input_ids'],
                     attention_mask=encoded['attention_mask'],
@@ -276,19 +216,13 @@ class RewardModelTrainer:
         
         # Move model to device
         self.model.to(device)
-        
-        # BEGIN ASSIGN7_1_6
-        # TODO: Initialize optimizer and loss function
-        # Use AdamW optimizer with the specified learning_rate and weight_decay
-        # Use MarginRankingLoss with margin=1.0 for preference learning
-        # raise NotImplementedError("Need to implement optimizer and loss function for Assignment 7")
-        
-        # SOLUTION (for reference, will be removed):
+
         self.optimizer = torch.optim.AdamW(
             model.parameters(),
             lr=learning_rate,
             weight_decay=weight_decay
         )
+
         # Please refer to:
         # https://docs.pytorch.org/docs/stable/generated/torch.nn.MarginRankingLoss.html
         self.loss_fn = nn.MarginRankingLoss(margin=1.0)
@@ -307,12 +241,6 @@ class RewardModelTrainer:
         chosen_texts = batch['chosen']
         rejected_texts = batch['rejected']
         
-        # BEGIN ASSIGN7_1_7
-        # TODO: Tokenize chosen and rejected responses
-        # Use the same tokenization parameters as in get_rewards method
-        # raise NotImplementedError("Need to implement batch preparation for Assignment 7")
-        
-        # SOLUTION (for reference, will be removed):
         chosen_encoded = self.tokenizer(
             chosen_texts,
             padding=True,
@@ -328,9 +256,7 @@ class RewardModelTrainer:
             max_length=self.max_length,
             return_tensors="pt"
         )
-        # END ASSIGN7_1_7
-        
-        # Move to device
+
         chosen_encoded = {k: v.to(self.device) for k, v in chosen_encoded.items()}
         rejected_encoded = {k: v.to(self.device) for k, v in rejected_encoded.items()}
         
@@ -357,22 +283,8 @@ class RewardModelTrainer:
         # 2. Get rewards for rejected responses
         # 3. Compute ranking loss: chosen should have higher reward than rejected
 
-        raise NotImplementedError("Need to implement loss computation for Assignment 7")
+        # raise NotImplementedError("Need to implement loss computation for Assignment 7")
         # END ASSIGN7_1
-        
-        # SOLUTION (for reference, will be removed):
-        # # Get rewards for chosen responses
-        # chosen_outputs = self.model(**batch['chosen'])
-        # chosen_rewards = chosen_outputs.rewards
-        # 
-        # # Get rewards for rejected responses
-        # rejected_outputs = self.model(**batch['rejected'])
-        # rejected_rewards = rejected_outputs.rewards
-        # 
-        # # Ranking loss: chosen should have higher reward than rejected
-        # target = torch.ones_like(chosen_rewards)  # Target: chosen > rejected
-        # loss = self.loss_fn(chosen_rewards, rejected_rewards, target)
-        # END ASSIGN7_1_8
         
         return loss, chosen_rewards, rejected_rewards
     
@@ -395,16 +307,8 @@ class RewardModelTrainer:
         # Compute loss
         loss, chosen_rewards, rejected_rewards = self.compute_loss(prepared_batch)
         
-        # BEGIN ASSIGN7_1_9
-        # TODO: Perform backward pass and optimization step
-        # 1. Call loss.backward()
-        # 2. Update optimizer with self.optimizer.step()
-        # raise NotImplementedError("Need to implement backward pass for Assignment 7")
-        
-        # SOLUTION (for reference, will be removed):
         loss.backward()
         self.optimizer.step()
-        # END ASSIGN7_1_9
         
         # Compute metrics
         with torch.no_grad():

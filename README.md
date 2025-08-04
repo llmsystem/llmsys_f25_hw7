@@ -56,33 +56,6 @@ conda activate llmsys_hw7
 pip install -r requirements.txt
 ```
 
-## Assignment Structure
-
-```
-llmsys_f25_hw7/
-├── README.md                    # This file
-├── requirements.txt             # Python dependencies
-├── data/
-│   ├── train_prompts.json      # Training prompts (auto-generated)
-│   ├── eval_prompts.json       # Evaluation prompts (auto-generated)
-│   ├── preference_data.json    # Human preference data (auto-generated)
-│   └── preference_data_sample.json # Small sample for quick testing
-├── src/
-│   ├── __init__.py
-│   ├── config.py               # Configuration settings
-│   ├── reward_model.py         # Reward model implementation
-│   ├── rlhf_trainer.py         # VERL-based RLHF trainer
-│   └── utils.py                # Utility functions
-├── scripts/
-│   ├── prepare_data.py          # Download and prepare HH-RLHF dataset
-│   ├── train_reward_model.py   # Script to train reward model
-│   ├── run_rlhf.py            # Script to run RLHF training
-│   └── evaluate.py            # Evaluation script
-└── tests/
-    ├── test_reward_model.py
-    └── test_rlhf.py
-```
-
 ## Training Data
 
 ### Data Sources

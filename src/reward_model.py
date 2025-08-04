@@ -5,7 +5,6 @@ This module contains the reward model used in the RLHF pipeline.
 
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 from transformers import (
     AutoModel, 
     AutoConfig,
@@ -283,10 +282,8 @@ class RewardModelTrainer:
         # 2. Get rewards for rejected responses
         # 3. Compute ranking loss: chosen should have higher reward than rejected
 
-        # raise NotImplementedError("Need to implement loss computation for Assignment 7")
+        raise NotImplementedError("Need to implement loss computation for Assignment 7")
         # END ASSIGN7_1
-        
-        return loss, chosen_rewards, rejected_rewards
     
     def train_step(self, batch: Dict) -> Dict[str, float]:
         """

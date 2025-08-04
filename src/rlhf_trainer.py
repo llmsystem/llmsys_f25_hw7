@@ -432,7 +432,7 @@ class VERLTrainer:
         Returns:
             Tuple of (advantages, returns)
         """
-        # BEGIN ASSIGN7_2_10
+        # BEGIN ASSIGN7_2_1
         # TODO: Implement simplified GAE computation
         # For this assignment, treat each response as a single-step episode:
         # 1. Compute returns = rewards + gamma * values (assume next state value = current value)

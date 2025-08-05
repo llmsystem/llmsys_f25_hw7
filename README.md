@@ -80,8 +80,7 @@ python scripts/prepare_data.py --dataset Anthropic/hh-rlhf --output_dir data --m
 In this problem, you 
 
 - Implement the ranking loss for the reward training in `compute_loss`.
-- The model should be based on a pre-trained transformer (DistilBERT)
-- Add proper handling for batched inputs and GPU acceleration
+- The model is based on a pre-trained transformer (DistilBERT)
 
 **1.2** Train your reward model using the provided preference data:
 
@@ -94,8 +93,6 @@ python scripts/train_reward_model.py
 **2.1** Complete the RLHF trainer implementation in `src/rlhf_trainer.py`:
 
 - Implement the `VERLTrainer` class using VERL's PPO implementation
-- Set up proper rollout generation using your reward model
-- Configure training parameters for stable learning
 
 **2.2** Run the RLHF training process:
 

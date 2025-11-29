@@ -54,7 +54,7 @@ class TrainingMetrics:
     advantage_std: float
 
 
-class VERLPolicyWrapper(PolicyModel):
+class VERLPolicyWrapper(nn.Module):
     """
     Wrapper class to make HuggingFace models compatible with VERL.
     """
@@ -218,7 +218,7 @@ class VERLPolicyWrapper(PolicyModel):
             return torch.stack(sequence_log_probs)
 
 
-class VERLValueWrapper(ValueModel):
+class VERLValueWrapper(nn.Module):
     """
     Value model wrapper for VERL integration.
     """

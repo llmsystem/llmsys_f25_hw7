@@ -1,19 +1,19 @@
-# Assignment 7: Introduction to VERL Framework
+# Assignment 7: Introduction to RLHF
 
 **CMU 11868 LLM Systems Spring 2025**
 
 
 ## Overview
 
-In this assignment, you will learn to use VERL (Volcano Engine Reinforcement Learning), a flexible and efficient reinforcement learning framework designed for large language models. You'll implement a basic RLHF (Reinforcement Learning from Human Feedback) pipeline using VERL to fine-tune a small language model for harmless and helpful responses.
+In this assignment, you will learn to implement a VERL (Volcano Engine Reinforcement Learning) like framework, a flexible and efficient reinforcement learning framework designed for large language models. You'll implement a basic RLHF (Reinforcement Learning from Human Feedback) pipeline to fine-tune a small language model for harmless and helpful responses.
 
 ## Learning Objectives
 
 After completing this assignment, you will be able to:
 - Understand the basic concepts of RLHF and its application to LLMs
-- Set up and configure the VERL framework
+- Set up and configure the VERL like framework
 - Implement a simple reward model for evaluating LLM outputs
-- Use VERL's PPO implementation to fine-tune a language model
+- Use VERL like framework to fine-tune a language model
 - Evaluate the performance improvements after RLHF training
 
 ## Background Reading
@@ -52,7 +52,7 @@ conda activate llmsys_hw7
 
 ```bash
 
-# Install VERL and other dependencies
+# Install dependencies
 pip install -r requirements.txt
 ```
 
@@ -85,19 +85,19 @@ In this problem, you
 **1.2** Train your reward model using the provided preference data:
 
 ```bash
-python scripts/train_reward_model.py
+PYTHONPATH=$(pwd) python scripts/train_reward_model.py
 ```
 
-### Problem 2: RLHF Training with VERL (40 points)
+### Problem 2: RLHF Training with VERL like framework (40 points)
 
 **2.1** Complete the RLHF trainer implementation in `src/rlhf_trainer.py`:
 
-- Implement the `VERLTrainer` class using VERL's PPO implementation
+- Implement the `VERLTrainer` class
 
 **2.2** Run the RLHF training process:
 
 ```bash
-python scripts/run_rlhf.py --model_name gpt2 --config src/config.py
+PYTHONPATH=$(pwd) python scripts/run_rlhf.py --model_name gpt2
 ```
 
 ### Problem 3: Evaluation and Analysis (20 points)
@@ -105,7 +105,7 @@ python scripts/run_rlhf.py --model_name gpt2 --config src/config.py
 **3.1** Run comprehensive evaluation:
 
 ```bash
-python scripts/evaluate.py --base_model gpt2 --rlhf_model outputs/rlhf_model --config src/config.py
+PYTHONPATH=$(pwd) python scripts/evaluate.py --base_model gpt2 --rlhf_model outputs/rlhf_model
 ```
 
 ### Testing

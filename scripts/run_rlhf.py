@@ -126,7 +126,7 @@ def run_rlhf_training(config: AssignmentConfig):
     
     baseline_full_texts = [f"{prompt} {response}" 
                           for prompt, response in zip(eval_prompts[:5], baseline_responses)]
-    baseline_rewards = reward_model.get_rewards(baseline_full_texts, trainer.tokenizer, device)
+    baseline_rewards = reward_model.get_rewards(baseline_full_texts, reward_model.tokenizer, device)
     
     # Start RLHF training
     logger.info("Starting RLHF training...")
@@ -283,7 +283,7 @@ def run_rlhf_training(config: AssignmentConfig):
     
     final_full_texts = [f"{prompt} {response}" 
                        for prompt, response in zip(eval_prompts[:5], final_responses)]
-    final_rewards = reward_model.get_rewards(final_full_texts, trainer.tokenizer, device)
+    final_rewards = reward_model.get_rewards(final_full_texts, reward_model.tokenizer, device)
     
     # Save models and results
     logger.info("Saving final models and results...")

@@ -15,16 +15,8 @@ from transformers import (
     PreTrainedModel
 )
 
-try:
-    from verl.trainer import PPOTrainer
-    from verl.models import PolicyModel, ValueModel
-    from verl.utils import rollout_generator
-    from verl.config import PPOConfig
-except ImportError:
-    logging.warning("VERL not installed. Some functionality may not work.")
-
-from .reward_model import RewardModel
-from .config import AssignmentConfig
+from src.reward_model import RewardModel
+from src.config import AssignmentConfig
 
 logger = logging.getLogger(__name__)
 
@@ -150,7 +142,7 @@ class VERLPolicyWrapper(nn.Module):
             skip_special_tokens=True,
             clean_up_tokenization_spaces=True
         )
-        
+
         # Compute log probabilities for generated tokens
         log_probs = self._compute_log_probs(generated_ids, generated.scores)
         
@@ -310,18 +302,7 @@ class VERLTrainer:
         # Create PPO configuration
         self.ppo_config = self._create_ppo_config()
         
-        # Initialize VERL PPO trainer
-        try:
-            self.ppo_trainer = PPOTrainer(
-                policy_model=self.policy,
-                value_model=self.value_model,
-                config=self.ppo_config
-            )
-        except Exception as e:
-            logger.warning(f"Failed to initialize VERL PPOTrainer: {e}")
-            logger.warning("Falling back to custom PPO implementation")
-            self.ppo_trainer = None
-            self._init_custom_optimizers()
+        self._init_custom_optimizers()
     
     def _create_ppo_config(self) -> Dict[str, Any]:
         """Create PPO configuration for VERL."""
@@ -375,7 +356,7 @@ class VERLTrainer:
         
         full_texts = [f"{prompt} {response}" for prompt, response in zip(prompts, responses)]
         rewards = torch.tensor(
-            self.reward_model.get_rewards(full_texts, self.tokenizer, self.device),
+            self.reward_model.get_rewards(full_texts, self.reward_model.tokenizer, self.device),
             device=self.device,
             dtype=torch.float32
         )
@@ -454,39 +435,7 @@ class VERLTrainer:
         Returns:
             Training metrics
         """
-        if self.ppo_trainer is not None:
-            # Use VERL's PPO trainer
-            return self._train_step_verl(rollout_batch)
-        else:
-            # Use custom PPO implementation
-            return self._train_step_custom(rollout_batch)
-    
-    def _train_step_verl(self, rollout_batch: RolloutBatch) -> TrainingMetrics:
-        """Training step using VERL's PPO trainer."""
-        # Convert rollout batch to VERL format
-        verl_batch = {
-            'observations': rollout_batch.prompts,
-            'actions': rollout_batch.responses,
-            'rewards': rollout_batch.rewards,
-            'old_log_probs': rollout_batch.log_probs,
-            'values': rollout_batch.values,
-            'advantages': rollout_batch.advantages,
-            'returns': rollout_batch.returns
-        }
-        
-        # Train using VERL's PPO trainer
-        metrics = self.ppo_trainer.train_step(verl_batch)
-        
-        return TrainingMetrics(
-            policy_loss=metrics.get('policy_loss', 0.0),
-            value_loss=metrics.get('value_loss', 0.0),
-            entropy=metrics.get('entropy', 0.0),
-            kl_divergence=metrics.get('kl_divergence', 0.0),
-            reward_mean=rollout_batch.rewards.mean().item(),
-            reward_std=rollout_batch.rewards.std().item(),
-            advantage_mean=rollout_batch.advantages.mean().item(),
-            advantage_std=rollout_batch.advantages.std().item()
-        )
+        return self._train_step_custom(rollout_batch)
     
     def _train_step_custom(self, rollout_batch: RolloutBatch) -> TrainingMetrics:
         """Custom PPO training step implementation."""
@@ -767,7 +716,7 @@ def evaluate_policy(
             full_texts = [f"{prompt} {response}" for response in responses]
             rewards = trainer.reward_model.get_rewards(
                 full_texts, 
-                trainer.tokenizer, 
+                trainer.reward_model.tokenizer, 
                 trainer.device
             )
             

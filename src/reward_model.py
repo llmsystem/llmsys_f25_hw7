@@ -5,7 +5,9 @@ This module contains the reward model used in the RLHF pipeline.
 
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 from transformers import (
+    AutoTokenizer, 
     AutoModel, 
     AutoConfig,
     PreTrainedModel,
@@ -58,6 +60,7 @@ class RewardModel(PreTrainedModel):
         self.hidden_size = hidden_size
 
         self.transformer = AutoModel.from_pretrained(model_name)
+        self.tokenizer = AutoTokenizer.from_pretrained(model_name)
         self.config = self.transformer.config
         
         self.reward_head = nn.Sequential(

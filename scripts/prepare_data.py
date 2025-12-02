@@ -43,8 +43,8 @@ def load_hh_rlhf_dataset(max_samples: int = 1000) -> Tuple[List[Dict], List[Dict
     # Load the dataset
     try:
         # Load both helpful and harmless subsets
-        helpful_dataset = load_dataset("Anthropic/hh-rlhf", "helpful-base", split="train")
-        harmless_dataset = load_dataset("Anthropic/hh-rlhf", "harmless-base", split="train")
+        helpful_dataset = load_dataset("Anthropic/hh-rlhf", data_dir="helpful-base", split="train")
+        harmless_dataset = load_dataset("Anthropic/hh-rlhf", data_dir="harmless-base", split="train")
         
         print(f"Loaded {len(helpful_dataset)} helpful examples")
         print(f"Loaded {len(harmless_dataset)} harmless examples")

@@ -132,27 +132,31 @@ class VERLPolicyWrapper(nn.Module):
             )
         
         # Extract generated sequences
+        
+        # generated_ids[:,i + prompt_lengths] is the prediction using generated.scores[:,i]
         generated_ids = generated.sequences
         
         prompt_lengths = encoded_prompts['input_ids'].shape[1]
-        response_ids = generated_ids[:, prompt_lengths:]
+        response_ids = generated_ids[:, prompt_lengths:] # padded length of the longest prompt in the batch
 
+        
         responses = self.tokenizer.batch_decode(
             response_ids,
-            skip_special_tokens=True,
-            clean_up_tokenization_spaces=True
+            skip_special_tokens=True, # padding token etc. are stripped
+            clean_up_tokenization_spaces=True # fix spacing
         )
 
         # Compute log probabilities for generated tokens
-        log_probs = self._compute_log_probs(generated_ids, generated.scores)
+        log_probs = self._compute_log_probs(generated_ids, generated.scores, prompt_lengths)
         
         self.model.train()
         return responses, log_probs
     
     def _compute_log_probs(
         self, 
-        generated_ids: torch.Tensor, 
-        scores: Tuple[torch.Tensor]
+        generated_ids: torch.Tensor,  # generated_ids[:, i] is the prediction using scores[:,i-prompt_lengths]
+        scores: Tuple[torch.Tensor],
+        prompt_lengths: int,
     ) -> torch.Tensor:
         """
         Compute log probabilities for generated sequences.
@@ -163,11 +167,7 @@ class VERLPolicyWrapper(nn.Module):
             
         Returns:
             Log probabilities tensor
-        """
-        if not scores:
-            # Fallback: compute log probs through forward pass
-            return self._compute_log_probs_fallback(generated_ids)
-        
+        """        
         log_probs = torch.stack([
             torch.log_softmax(score, dim=-1) 
             for score in scores
@@ -179,10 +179,12 @@ class VERLPolicyWrapper(nn.Module):
         
         for i in range(batch_size):
             sequence_log_probs = []
-            for j in range(1, seq_len):  # Skip first token (from prompt)
-                if j-1 < log_probs.shape[1]:
-                    token_id = generated_ids[i, j]
-                    token_log_prob = log_probs[i, j-1, token_id]
+            for j in range(prompt_lengths, seq_len):  # skip the prompt part
+                token_id = generated_ids[i, j]
+                if token_id == self.tokenizer.pad_token_id: # break if we see a padding token
+                    break
+                if j-prompt_lengths < log_probs.shape[1]:
+                    token_log_prob = log_probs[i, j-prompt_lengths, token_id]
                     sequence_log_probs.append(token_log_prob)
             
             if sequence_log_probs:

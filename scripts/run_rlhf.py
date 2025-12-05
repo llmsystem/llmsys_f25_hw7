@@ -117,7 +117,7 @@ def run_rlhf_training(config: AssignmentConfig):
     
     # Generate baseline samples for comparison
     logger.info("Generating baseline samples...")
-    baseline_responses, _ = trainer.policy.generate(
+    baseline_responses,_,_,_, _ = trainer.policy.generate(
         prompts=eval_prompts[:5],  # First 5 prompts for comparison
         max_length=config.verl.rollout_max_length,
         temperature=config.verl.rollout_temperature,
@@ -150,8 +150,6 @@ def run_rlhf_training(config: AssignmentConfig):
         }
         
         num_batches = len(train_prompts) // config.verl.rollout_batch_size
-        if len(train_prompts) % config.verl.rollout_batch_size != 0:
-            num_batches += 1
         
         # Create progress bar for epoch
         epoch_progress = tqdm(range(num_batches), desc=f"Epoch {epoch + 1}")
@@ -274,7 +272,7 @@ def run_rlhf_training(config: AssignmentConfig):
     
     # Generate final samples for comparison
     logger.info("Generating final samples for comparison...")
-    final_responses, _ = trainer.policy.generate(
+    final_responses,_,_,_,_ = trainer.policy.generate(
         prompts=eval_prompts[:5],
         max_length=config.verl.rollout_max_length,
         temperature=config.verl.rollout_temperature,

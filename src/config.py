@@ -3,7 +3,7 @@ Configuration file for Assignment 7 - VERL RLHF Training
 This file contains all configuration parameters for the RLHF pipeline.
 """
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Optional, Dict, Any
 import torch
 
@@ -171,12 +171,12 @@ class ExperimentConfig:
 class AssignmentConfig:
     """Main configuration class combining all sub-configurations."""
     
-    model: ModelConfig = ModelConfig()
-    data: DataConfig = DataConfig()
-    training: TrainingConfig = TrainingConfig()
-    verl: VERLConfig = VERLConfig()
-    system: SystemConfig = SystemConfig()
-    experiment: ExperimentConfig = ExperimentConfig()
+    model: ModelConfig = field(default_factory=ModelConfig)
+    data: DataConfig = field(default_factory=DataConfig)
+    training: TrainingConfig = field(default_factory=TrainingConfig)
+    verl: VERLConfig = field(default_factory=VERLConfig)
+    system: SystemConfig = field(default_factory=SystemConfig)
+    experiment: ExperimentConfig = field(default_factory=ExperimentConfig)
     
     def to_dict(self) -> Dict[str, Any]:
         """Convert configuration to dictionary."""

@@ -560,6 +560,12 @@ class VERLTrainer:
             log_ratio = new_log_probs - rollout_batch.log_probs
             approx_kl = (torch.exp(log_ratio) - 1) - log_ratio
             kl_div = approx_kl.mean()
+
+            # Accumulate metrics
+            total_policy_loss += policy_loss.item()
+            total_value_loss += value_loss.item()
+            total_entropy += entropy.item()
+            total_kl += kl_div.item()
             
             # Early stopping if KL divergence is too large
             if kl_div.item() > self.config.verl.ppo_target_kl * 2:
@@ -584,11 +590,6 @@ class VERLTrainer:
             )
             self.value_optimizer.step()
             
-            # Accumulate metrics
-            total_policy_loss += policy_loss.item()
-            total_value_loss += value_loss.item()
-            total_entropy += entropy.item()
-            total_kl += kl_div.item()
         
         num_epochs = self.config.verl.ppo_epochs
         return TrainingMetrics(

@@ -284,6 +284,7 @@ def evaluate_models(config: AssignmentConfig):
     # Load base model
     logger.info(f"Loading base model: {config.model.model_name}")
     base_tokenizer = AutoTokenizer.from_pretrained(config.model.model_name)
+    base_tokenizer.padding_side = "left"
     base_model = AutoModelForCausalLM.from_pretrained(config.model.model_name)
     
     if base_tokenizer.pad_token is None:
@@ -301,6 +302,7 @@ def evaluate_models(config: AssignmentConfig):
         # Load RLHF model for comparison
         logger.info(f"Loading RLHF model from {rlhf_model_path}")
         rlhf_tokenizer = AutoTokenizer.from_pretrained(rlhf_model_path)
+        rlhf_tokenizer.padding_side = "left"
         rlhf_model = AutoModelForCausalLM.from_pretrained(rlhf_model_path)
         
         if rlhf_tokenizer.pad_token is None:

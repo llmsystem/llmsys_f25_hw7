@@ -205,3 +205,10 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+
+.vscode/
+data/
+outputs/
+logs/
+plots/
+evaluation_results/

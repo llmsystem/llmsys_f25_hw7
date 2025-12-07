@@ -110,7 +110,7 @@ class VERLConfig:
     
     # Reward settings
     reward_clip: float = 5.0
-    reward_normalize: bool = True
+    reward_normalize: bool = False
 
 
 @dataclass

@@ -370,32 +370,63 @@ def plot_training_curves(
     # Convert to DataFrame for easier plotting
     df = pd.DataFrame(metrics_history)
     
+    # X-axis: prefer 'step' column if available
+    x = df['step'] if 'step' in df.columns else df.index
+    
     # Create subplots
     fig, axes = plt.subplots(2, 2, figsize=(12, 10))
     fig.suptitle(title, fontsize=16)
     
-    # Plot policy loss
+    # Top-left: losses
     if 'policy_loss' in df.columns:
-        axes[0, 0].plot(df.index, df['policy_loss'])
+        axes[0, 0].plot(x, df['policy_loss'], label='Policy Loss')
         axes[0, 0].set_title('Policy Loss')
         axes[0, 0].set_xlabel('Step')
         axes[0, 0].set_ylabel('Loss')
         axes[0, 0].grid(True)
+    else:
+        plotted = False
+        if 'train_loss' in df.columns:
+            axes[0, 0].plot(x, df['train_loss'], label='Train Loss')
+            plotted = True
+        if 'val_loss' in df.columns:
+            axes[0, 0].plot(x, df['val_loss'], label='Val Loss')
+            plotted = True
+        if plotted:
+            axes[0, 0].set_title('Loss')
+            axes[0, 0].set_xlabel('Step' if 'step' in df.columns else 'Index')
+            axes[0, 0].set_ylabel('Loss')
+            axes[0, 0].legend()
+            axes[0, 0].grid(True)
     
-    # Plot value loss
+    # Top-right: value/accuracy
     if 'value_loss' in df.columns:
-        axes[0, 1].plot(df.index, df['value_loss'])
+        axes[0, 1].plot(x, df['value_loss'], label='Value Loss')
         axes[0, 1].set_title('Value Loss')
         axes[0, 1].set_xlabel('Step')
         axes[0, 1].set_ylabel('Loss')
         axes[0, 1].grid(True)
+    else:
+        plotted = False
+        if 'train_accuracy' in df.columns:
+            axes[0, 1].plot(x, df['train_accuracy'], label='Train Acc')
+            plotted = True
+        if 'val_accuracy' in df.columns:
+            axes[0, 1].plot(x, df['val_accuracy'], label='Val Acc')
+            plotted = True
+        if plotted:
+            axes[0, 1].set_title('Accuracy')
+            axes[0, 1].set_xlabel('Step' if 'step' in df.columns else 'Index')
+            axes[0, 1].set_ylabel('Accuracy')
+            axes[0, 1].legend()
+            axes[0, 1].grid(True)
     
-    # Plot rewards
+    # Bottom-left: rewards or reward diff
     if 'reward_mean' in df.columns:
-        axes[1, 0].plot(df.index, df['reward_mean'])
+        axes[1, 0].plot(x, df['reward_mean'], label='Reward Mean')
         if 'reward_std' in df.columns:
             axes[1, 0].fill_between(
-                df.index, 
+                x, 
                 df['reward_mean'] - df['reward_std'],
                 df['reward_mean'] + df['reward_std'],
                 alpha=0.3
@@ -404,14 +435,45 @@ def plot_training_curves(
         axes[1, 0].set_xlabel('Step')
         axes[1, 0].set_ylabel('Reward')
         axes[1, 0].grid(True)
+    else:
+        plotted = False
+        if 'train_reward_diff' in df.columns:
+            axes[1, 0].plot(x, df['train_reward_diff'], label='Train Reward Diff')
+            plotted = True
+        if 'val_reward_diff' in df.columns:
+            axes[1, 0].plot(x, df['val_reward_diff'], label='Val Reward Diff')
+            plotted = True
+        if plotted:
+            axes[1, 0].set_title('Reward Difference (chosen - rejected)')
+            axes[1, 0].set_xlabel('Step' if 'step' in df.columns else 'Index')
+            axes[1, 0].set_ylabel('Reward Diff')
+            axes[1, 0].legend()
+            axes[1, 0].grid(True)
     
-    # Plot KL divergence
+    # Bottom-right: KL or reward means
     if 'kl_divergence' in df.columns:
-        axes[1, 1].plot(df.index, df['kl_divergence'])
+        axes[1, 1].plot(x, df['kl_divergence'], label='KL Divergence')
         axes[1, 1].set_title('KL Divergence')
         axes[1, 1].set_xlabel('Step')
         axes[1, 1].set_ylabel('KL Divergence')
         axes[1, 1].grid(True)
+    else:
+        plotted = False
+        for col, label in [
+            ('train_chosen_reward_mean', 'Train Chosen'),
+            ('train_rejected_reward_mean', 'Train Rejected'),
+            ('val_chosen_reward_mean', 'Val Chosen'),
+            ('val_rejected_reward_mean', 'Val Rejected'),
+        ]:
+            if col in df.columns:
+                axes[1, 1].plot(x, df[col], label=label)
+                plotted = True
+        if plotted:
+            axes[1, 1].set_title('Chosen/Rejected Reward Means')
+            axes[1, 1].set_xlabel('Step' if 'step' in df.columns else 'Index')
+            axes[1, 1].set_ylabel('Reward')
+            axes[1, 1].legend()
+            axes[1, 1].grid(True)
     
     plt.tight_layout()
     plt.savefig(save_path, dpi=300, bbox_inches='tight')

@@ -468,7 +468,7 @@ class VERLTrainer:
         # HINT: For this assignment, think of each token as a step in a multi-step episode (like time steps in a trajectory).
         # For each sequence in the batch:
         #   - Create an expanded reward tensor (same shape as values), where only the last token position (according to attention_mask) has the sequence reward, and all earlier tokens are zero.
-        #   - For each token position, compute returns as: returns[i] = reward[i] + gamma * value[i + 1] (set value[last+1] = 0).
+        #   - For each token position, compute returns as: returns[i] = reward[i + 1] + gamma * value[i + 1]
         #   - Compute advantage for each token as: advantage[i] = returns[i] - value[i].
         # Only compute these where the attention_mask is 1 (i.e., for valid tokens, not padding).
         # END ASSIGN7_2_1

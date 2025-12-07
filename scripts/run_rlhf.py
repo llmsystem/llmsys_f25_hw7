@@ -258,7 +258,7 @@ def run_rlhf_training(config: AssignmentConfig):
         trainer.save_checkpoint(checkpoint_path, epoch, epoch_metrics)
         
         # Update metrics tracker with epoch metrics
-        metrics_tracker.update(epoch_metrics, step=epoch)
+        # metrics_tracker.update(epoch_metrics, step=epoch)
         
         logger.info(f"Epoch {epoch + 1} completed:")
         logger.info(f"  Average Reward: {epoch_metrics['reward_mean']:.4f}")

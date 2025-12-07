@@ -126,7 +126,7 @@ python -m pytest tests/ -v
 2. **Create Submission Archive**:
    ```bash
    # Remove large model files but keep small checkpoints
-   find outputs/ -name "*.bin" -size +100M -delete
+   find outputs/ -name "*.pt" -size +500M -delete
    
    # Create submission zip
    zip -r assignment7_[your_andrew_id].zip . -x "*.git*" "*__pycache__*" "*.pyc"

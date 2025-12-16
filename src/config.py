@@ -73,6 +73,7 @@ class TrainingConfig:
     ppo_value_coef: float = 0.5
     ppo_entropy_coef: float = 0.01
     ppo_max_grad_norm: float = 1.0
+    ppo_kl_penalty: float = 0.0
     
     # Generation parameters for rollouts
     generation_max_length: int = 256

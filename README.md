@@ -108,6 +108,9 @@ PYTHONPATH=$(pwd) python scripts/run_rlhf.py --model_name gpt2
 PYTHONPATH=$(pwd) python scripts/evaluate.py --base_model gpt2 --rlhf_model outputs/rlhf_model
 ```
 
+You may notice gibberish generations receiving high rewards. 
+This is expected, as the reward model is neural model and the policy model learns to exploit its loopholes.
+
 ### Testing
 
 Run the provided tests to verify your implementation:

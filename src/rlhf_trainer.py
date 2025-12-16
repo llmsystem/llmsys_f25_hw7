@@ -65,7 +65,7 @@ class VERLPolicyWrapper(nn.Module):
             tokenizer: Tokenizer for the model
         """
         super().__init__()
-        self.model = model
+        self.model = copy.deepcopy(model)
         self.tokenizer = tokenizer
         
         # Ensure pad token is set
@@ -338,15 +338,18 @@ class VERLTrainer:
         
         # Wrap models for VERL compatibility
         self.policy = VERLPolicyWrapper(policy_model, tokenizer)
+        self.ref_policy = VERLPolicyWrapper(policy_model, tokenizer)
         self.value_model = VERLValueWrapper(policy_model, tokenizer)
         self.reward_model = reward_model
         
         # Move models to device
         self.policy.to(device)
+        self.ref_policy.to(device)
         self.value_model.to(device)
         self.reward_model.to(device)
         
         # Set reward model to eval mode
+        self.ref_policy.eval()
         self.reward_model.eval()
         
         # Create PPO configuration
@@ -523,6 +526,17 @@ class VERLTrainer:
             )
             new_log_probs = torch.cat(new_log_probs, dim=0)
             old_log_probs = torch.cat(rollout_batch.log_probs, dim=0)
+            with torch.no_grad():
+                ref_policy_outputs = self.ref_policy(
+                    input_ids=input_ids,
+                    attention_mask=full_attn_mask,
+                )
+                ref_scores = ref_policy_outputs.logits[:, prompt_len - 1 : -1, :]
+                ref_log_probs, ref_log_probs_mask = self.ref_policy._compute_log_probs_tensor(
+                    input_ids, ref_scores, prompt_len
+                )
+                ref_log_probs = torch.cat(ref_log_probs, dim=0)
+            
             advantages = rollout_batch.advantages[:, prompt_len - 1 : -1][new_log_probs_mask]
             
             # BEGIN ASSIGN7_2_2
@@ -536,11 +550,18 @@ class VERLTrainer:
             raise NotImplementedError("Need to implement PPO loss computation for Assignment 7")
             
             # END ASSIGN7_2_2
+
+            # Compute KL divergence for monitoring
+            # k3 described in http://joschu.net/blog/kl-approx.html
+            log_ratio = new_log_probs - ref_log_probs
+            approx_kl = (torch.exp(log_ratio) - 1) - log_ratio
+            kl_div = approx_kl.mean()
             
             # Total policy loss with entropy bonus
             total_policy_loss_step = (
                 policy_loss - 
-                self.config.training.ppo_entropy_coef * entropy
+                self.config.training.ppo_entropy_coef * entropy +
+                self.config.training.ppo_kl_penalty * kl_div
             )
             
             # Value function training
@@ -552,18 +573,7 @@ class VERLTrainer:
             values = values[full_attn_mask[:, prompt_len - 1 :].bool()]
             returns = rollout_batch.returns[:, prompt_len - 1 :]
             returns = returns[full_attn_mask[:, prompt_len - 1 :].bool()]
-            value_loss = nn.MSELoss()(values, returns)
-            
-            # Compute KL divergence for monitoring
-            # k3 described in http://joschu.net/blog/kl-approx.html
-            log_ratio = new_log_probs - old_log_probs
-            approx_kl = (torch.exp(log_ratio) - 1) - log_ratio
-            kl_div = approx_kl.mean()
-            
-            # Early stopping if KL divergence is too large
-            if kl_div.item() > self.config.verl.ppo_target_kl * 2:
-                logger.warning(f"Early stopping due to large KL divergence: {kl_div.item()}")
-                break
+            value_loss = nn.MSELoss()(values, returns)            
             
             # Backward pass for policy
             self.policy_optimizer.zero_grad()

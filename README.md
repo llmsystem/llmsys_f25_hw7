@@ -131,3 +131,11 @@ python -m pytest tests/ -v
    # Create submission zip
    zip -r assignment7_[your_andrew_id].zip . -x "*.git*" "*__pycache__*" "*.pyc"
    ```
+
+## Grading Criteria
+
+Problem 1: pass the pytest and achieve at least 60% validation acc with reward model
+
+Problem 2: observe reasonable improvement of reward after RLHF training (e.g., -0.5 to +0.5) in the rlhf_training_curves.png
+
+Problem 3: see clearly different reward distributions of model before and after RLHF in figure reward_comparison.png and also make sure to upload the model checkpoints of best reward model and best rlhf model so TA can reproduce the evaluation.

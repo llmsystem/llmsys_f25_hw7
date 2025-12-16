@@ -44,8 +44,8 @@ cd llmsys_f25_hw7
 ### Step 2: Create a Virtual Environment
 
 ```bash
-conda create -n llmsys_hw7 python=3.9
-conda activate llmsys_hw7
+python -m venv llm_sys_hw7
+source llm_sys_hw7/bin/activate
 ```
 
 ### Step 3: Install Dependencies

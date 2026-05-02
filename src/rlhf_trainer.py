@@ -553,8 +553,8 @@ class VERLTrainer:
 
             # Compute KL divergence for monitoring
             # k3 described in http://joschu.net/blog/kl-approx.html
-            log_ratio = new_log_probs - ref_log_probs
-            approx_kl = (torch.exp(log_ratio) - 1) - log_ratio
+            log_ratio = ref_log_probs - new_log_probs
+            approx_kl = torch.exp(log_ratio) - 1 - log_ratio
             kl_div = approx_kl.mean()
             
             # Total policy loss with entropy bonus
@@ -767,7 +767,7 @@ def evaluate_policy(
             )
             
             # Get rewards for generated responses
-            full_texts = [f"{prompt} {response}" for prompt, response in zip(batch_prompts, responses)]
+            full_texts = [f"{prompt} {response}" for prompt, response in zip(batch_prompts_duplicated, responses)]
             rewards = trainer.reward_model.get_rewards(
                 full_texts, 
                 trainer.reward_model.tokenizer, 
